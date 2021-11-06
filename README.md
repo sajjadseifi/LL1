@@ -1,15 +1,17 @@
 # LL1
 
-#Gramer 
-    S' -> S $
-    S  -> D O
-    D  -> draw
-    D  -> 
-    O  -> circle
-    O  -> box
-    O  -> 
+# Gramer 
+    <ul>
+    <li>S' -> S $</li>
+    <li>S  -> D O</li>
+    <li>D  -> draw</li>
+    <li>D  -> </li>
+    <li>O  -> circle</li>
+    <li>O  -> box</li>
+    <li>O  -></li>
+    </ul>
 
-#Nullale Table 
+# Nullale Table 
 [
    { state: "S'", data: false },
    { state: 'S', data: true },
@@ -17,7 +19,7 @@
    { state: 'O', data: true }
 ]
 
-First Table 
+# First Table 
 [
    { state: "S'", data: [ '$', 'draw', 'circle', 'box' ] },
    { state: 'S', data: [ 'draw', 'circle', 'box' ] },
@@ -25,7 +27,7 @@ First Table
    { state: 'O', data: [ 'circle', 'box' ] }
 ]
 
-Follow Table 
+# Follow Table 
 [
    { state: "S'", data: [] },
    { state: 'S', data: [ '$' ] },
@@ -33,7 +35,7 @@ Follow Table
    { state: 'O', data: [ '$' ] }
 ]
 
- TableLL1 
+# TableLL1 
 {
    states: [ "S'", 'S', 'D', 'O' ],
    column: [ '$', 'draw', 'circle', 'box' ],
@@ -45,7 +47,8 @@ Follow Table
     ]
 }
 
-#Example 1
+# Example 1
+
  input source string : "draw $"
  $ S  | Expand  0
  $ O D  | Expand  1
@@ -54,13 +57,14 @@ Follow Table
  $  | Expand  6
  Accepted.
 
-#Example 2
+# Example 2
+
  input source string : "draw draw $"
  S $  | Expand  0
  D O  | Expand  1
  Syntax Error
 
-#Example 3
+# Example 3
  input source string : "draw box box $"
  $ S  | Expand  0
  $ O D  | Expand  1
