@@ -12,16 +12,16 @@
     </ul>
 
 # Nullale Table 
-<p>
+
     [
         { state: "S'", data: false },
         { state: 'S', data: true },
         { state: 'D', data: true },
         { state: 'O', data: true }
     ]
-</p>
 
 # First Table 
+
 [
    { state: "S'", data: [ '$', 'draw', 'circle', 'box' ] },
    { state: 'S', data: [ 'draw', 'circle', 'box' ] },
@@ -30,6 +30,7 @@
 ]
 
 # Follow Table 
+
 [
    { state: "S'", data: [] },
    { state: 'S', data: [ '$' ] },
@@ -38,6 +39,7 @@
 ]
 
 # TableLL1 
+
 {
    states: [ "S'", 'S', 'D', 'O' ],
    column: [ '$', 'draw', 'circle', 'box' ],
