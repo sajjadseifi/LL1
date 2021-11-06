@@ -1,6 +1,7 @@
 # LL1
 
-<h2>Gramer</h2> 
+# Gramer
+
     0 : S' -> S $
     1 : S  -> D O
     2 : D  -> draw
