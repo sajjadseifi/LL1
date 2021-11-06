@@ -1,15 +1,13 @@
 # LL1
 
 <h2>Gramer</h2> 
-    <ul>
-        <li>S' -> S $</li>
-        <li>S  -> D O</li>
-        <li>D  -> draw</li>
-        <li>D  -> </li>
-        <li>O  -> circle</li>
-        <li>O  -> box</li>
-        <li>O  -></li>
-    </ul>
+    0 : S' -> S $
+    1 : S  -> D O
+    2 : D  -> draw
+    3 : D  -> 
+    4 : O  -> circle
+    5 : O  -> box
+    6 : O  ->
 
 # Nullale Table 
 
