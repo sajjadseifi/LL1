@@ -12,12 +12,14 @@
     </ul>
 
 # Nullale Table 
-[
-   { state: "S'", data: false },
-   { state: 'S', data: true },
-   { state: 'D', data: true },
-   { state: 'O', data: true }
-]
+<p>
+    [
+        { state: "S'", data: false },
+        { state: 'S', data: true },
+        { state: 'D', data: true },
+        { state: 'O', data: true }
+    ]
+</p>
 
 # First Table 
 [
