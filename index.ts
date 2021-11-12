@@ -156,9 +156,11 @@ interface IStep<T> {
 class TableSteps<T> implements IStep<T> {
     states:StateTable<T>[];
     is_change:boolean;
+    steps:StateTable<T>[][] = [];
     constructor(public cfg:ICfg,inital_value:T){
         this.is_change=false;
         this.states=[];
+        this.steps=[];
         this.init(inital_value);
     }
     init(data:T){
@@ -180,6 +182,7 @@ class TableSteps<T> implements IStep<T> {
     }
     un_changed()
     {
+        this.steps.push([...this.states]);
         this.is_change = false;
     }
     table_state(state:string)
@@ -205,6 +208,36 @@ class TableSteps<T> implements IStep<T> {
         this.un_changed();
 
         return this;
+    }
+    printt(title="Table")
+    {
+        const state_base = this.states.map(s=>s.state);
+        let cols :any [] = ["Variable"];
+        let rows :any[] = state_base.map(s=>({
+            "Variable":s
+        }));
+        let mx = this.steps;
+        let col_size=mx.length < 1 ? 0 : mx[0].length;
+        console.log({col_size});     
+        for(let j=0; j < col_size;j++)
+        {
+            let r = {};
+            for (let i = 0; i < mx.length; i++) {
+                let d :any = mx[i][j].data;
+                if(d instanceof Array) 
+                    d = d.join(",");
+                else if(d === true || d === false)
+                    d = d ? "T":"F";
+                
+                r = Object.assign(r,{[i]:d});
+            }
+            rows[j] = Object.assign(rows[j],r);
+        }
+        if(mx.length > 0)
+            [...Array(mx.length)].map((_,i)=>cols.push(i));
+        
+        console.log(title);
+        console.table(rows,cols);
     }
 }
 
@@ -272,6 +305,20 @@ class TableLL1 implements ITableLL1{
     remove_all(state:string,terminal:string): boolean
     {
         return false;
+    }
+    print_all(){
+        let prnt_list :any = [...this.matrix]; 
+        let line ="";
+        for (const row of prnt_list) {
+            for(const  item of  row){ 
+                if(item instanceof Array)
+                 line += item.join("/")+",";
+                else if (item == null) line+= "-,"
+                else line += item + ","
+            }
+            line+="\n";
+        }
+        console.log(line);
     }
 }
 
@@ -398,13 +445,12 @@ const nullable=(tbl : TableSteps<boolean>,index_state : number,data:boolean) : b
 };
 
 const first = (tbl : TableSteps<string[]>,index_state : number) : string[] =>{
-    const  cfg= tbl.cfg;
+    const  cfg = tbl.cfg;
     const rule = cfg.rules[index_state];
     let toks : string[] = [...tbl.table_state(rule.state)!.data];
     for (const expr of rule.toks) {
         //nullable just only to be expr is State and 
         let is_state = (cfg as Cfg).is_state(expr);
-
         //this is a terminal token
         if(!is_state) 
         {
@@ -413,14 +459,20 @@ const first = (tbl : TableSteps<string[]>,index_state : number) : string[] =>{
             
             break;
         }
-        //get state of tableState  for checking nullable is true 
-        let sttl = tbl.table_state(expr)!;        
-        //if size of data 0 this means no first on our list 
-        if(sttl.data.length == 0) continue;
-        //check sttl.data exist in the tok array 
-        toks = concat_uniq(toks,sttl.data);
+        else
+        {
+            //get state of tableState  for checking nullable is true 
+            let sttl = tbl.table_state(expr)!;        
+            //if size of data 0 this means no first on our list 
+            //check sttl.data exist in the tok array 
+            if(sttl.data.length > 0)
+                toks = concat_uniq(toks,sttl.data);
+            
+             //check nullable expr token
+            const is_nlbl_state = nltbl.table_state(expr)?.data; 
+            if(is_nlbl_state == false) break;
+        }
     } 
-    
     return toks;
 };
 
@@ -483,7 +535,7 @@ const nullable_table=(cfg : ICfg) : TableSteps<boolean>=>{
         step++;  
     }
     stp_table.un_changed();
-    console.log("Nullale Table",stp_table.states);
+    stp_table.printt("Nullale Table");
     return stp_table;
 };
 
@@ -511,7 +563,7 @@ const first_table =(cfg : ICfg) : TableSteps<string[]>=>{
         step++;  
     }
     stp_table.un_changed();
-    console.log("First Table",stp_table.states);
+    stp_table.printt("First Table");
     return stp_table;
 
 };
@@ -554,7 +606,7 @@ const follow_table=(cfg : ICfg) : TableSteps<string[]>=>{
         step++;  
     }
     stp_table.un_changed();
-    console.log("Follow Table",stp_table.states);
+    stp_table.printt("Follow Table");
     return stp_table;
 };
 
@@ -607,19 +659,62 @@ const init_gramer = (): ICfg =>{
     cfg.add_rule("F", "int");
     return cfg;
 };
-
+const gm  = (): ICfg =>{
+    const cfg = new Cfg();
+    cfg.add_rule("S'","S","$");
+    cfg.add_rule("S","u","B","D","z");
+    cfg.add_rule("B","B","v");
+    cfg.add_rule("B", "w");
+    cfg.add_rule("D","E","F");
+    cfg.add_rule("E", "y");
+    cfg.add_rule("E");
+    cfg.add_rule("F", "x");
+    cfg.add_rule("F");
+    return cfg;
+};
+const printer_table=(ll:ITableLL1)=>{
+    const cols = ["Variable",...ll.column];
+    let rows =[];
+    let mx = ll.matrix;
+    for(let i =0; i < mx.length ; i++){
+        let obj = {};
+        for(let j=0;j< mx[i].length;j++){
+            if(mx[i][j])
+                obj = Object.assign(obj,{[cols[j+1]]:mx[i][j]});
+        }
+        rows.push({
+            "Variable":ll.states[i],
+            ...obj
+        });
+    }
+    console.table(rows,cols);
+};
+const exam5 = () : ICfg =>  {
+    const cfg = new Cfg();
+    cfg.add_rule("S'","S","$");
+    cfg.add_rule("S","id","K");
+    cfg.add_rule("K","firend","N","O");
+    cfg.add_rule("K", "N","enemy");
+    cfg.add_rule("N","num");
+    cfg.add_rule("N");
+    cfg.add_rule("O", "for","num");
+    cfg.add_rule("O");
+    return cfg;
+};
 //runable method
 const run= ()=>{
     // let gises =init_gramer() as Cfg;
-    let cfg = my_gram();
+    let cfg = exam5();
     console.log(cfg.uniq_states);
     let ll1_tbl = ll1_table(cfg);
-    console.log(ll1_tbl);
+    // ll1_tbl.print_all();
+    printer_table(ll1_tbl);
     let ll1 = new LL1(cfg as Cfg,ll1_tbl);
-    
-    ll1.analyze("draw $");
-    ll1.analyze("draw draw $");
-    ll1.analyze("draw box box $");
+    // console.log(ll1_tbl);
+
+    // ll1.analyze("draw $");
+    // ll1.analyze("draw draw $");
+    // ll1.analyze("draw box box $");
 };
 
 run();
