@@ -714,7 +714,7 @@ const printer_table=(ll:ITableLL1)=>{
     for(let i =0; i < mx.length ; i++){
         let obj = {};
         for(let j=0;j< mx[i].length;j++){
-            if(mx[i][j])
+            if(mx[i][j] || mx[i][j] ===0)
                 obj = Object.assign(obj,{[cols[j+1]]:mx[i][j]});
         }
         rows.push({
@@ -722,7 +722,7 @@ const printer_table=(ll:ITableLL1)=>{
             ...obj
         });
     }
-
+    // console.log(rows);
     console.log("LL1 Table");
     console.table(rows,cols);
 };
@@ -741,10 +741,11 @@ const exam5 = () : ICfg =>  {
 //runable method
 const run= ()=>{
     // let gises =init_gramer() as Cfg;
-    // let cfg = exam5();
-    let cfg = my_gram();
+    let cfg = exam5();
+    // let cfg = gm();
     console.log(cfg.uniq_states);
     let ll1_tbl = ll1_table(cfg);
+    // console.log(ll1_tbl);
     // ll1_tbl.print_all();
     printer_table(ll1_tbl);
     let ll1 = new LL1(cfg as Cfg,ll1_tbl);
@@ -752,8 +753,8 @@ const run= ()=>{
 
     // ll1.analyze("draw $");
     // ll1.analyze("draw draw $");
-    print_actbl(ll1.analyze("draw box box $"));
-    print_actbl(ll1.analyze("draw box $"));
+    // print_actbl(ll1.analyze("draw box box $"));
+    // print_actbl(ll1.analyze("draw box $"));
 };
 
 run();
