@@ -3,6 +3,7 @@ let frstbl:TableSteps<string[]>;
 let flwtbl:TableSteps<string[]>;
 
 interface Array<T> {
+    rev_tostr() : string;
     push_uniq<T>(data:T) : boolean;
     index_data<T>(data:T) : number;
 }
@@ -12,6 +13,9 @@ interface String {
     out_of_bound(pos:number):boolean;
 }
 
+Array.prototype.rev_tostr= function() :string {
+    return [...this].reverse().join(" ")
+}
 Array.prototype.push_uniq= function(data):boolean {
     if(this.findIndex(a=>a === data) != -1) 
         return false;
@@ -328,7 +332,25 @@ interface ILL1 {
     stack:string[];
     analyze(src:string):void;
 }
+type StackString = string;
+type InputString = string;
+type ActionString = string;
+type AcceptableRow = [StackString,InputString,ActionString]
+type AcceptableTable = AcceptableRow[];
+const print_actbl = (actbl : AcceptableTable) : void =>{
+    const columns = ["Stack","Input","Action"];
+    const rows :any[]= [];
+    for (let i = 0; i < actbl.length; i++) {
+        const item = actbl[i];
+        let obj={};
+        for (let i = 0; i < item.length; i++) 
+            obj = Object.assign(obj,{[columns[i]] : item[i]});
+        
+        rows.push(obj);
+    }
 
+    console.table(rows,columns);
+};
 class LL1 implements ILL1 {
     stack:string[]=[];
     constructor(public cfg:Cfg,public table: ITableLL1){
@@ -339,7 +361,7 @@ class LL1 implements ILL1 {
     append_toks_rule(rule_index:number){
         const rule = this.cfg.rules[rule_index];
         
-        for (const tk of rule.toks.reverse())   
+        for (const tk of [...rule.toks].reverse())   
             this.stack.push(tk);
     }
     next_token(src:string,pos:number): [string,number]
@@ -356,16 +378,23 @@ class LL1 implements ILL1 {
         } 
         return [token,pos];
     }
-    analyze(src: string): void {
+    _next_all(src:string,pos:number):string{
+        return src.slice(pos,src.length);
+    }
+    analyze(src: string): AcceptableTable {
         console.log(`input source string : "${src}"`);
+        let acc_tbl  : AcceptableTable =[];
         let ch_pos:number = 0;
         this.init();
-
+        let all = src;
+        let item;
+        let break_pos=0;
         while(true){
             if(this.stack.length == 0) break;
+
             let expr = this.next_token(src,ch_pos);
             //get last item in stack
-            let item = this.stack.pop()!;
+            item = this.stack.pop()!;
             if(this.cfg.is_state(item))
             {
                 const rule_index = this.table.get(item,expr[0]);
@@ -374,31 +403,37 @@ class LL1 implements ILL1 {
                 }
                 else if (rule_index instanceof Array)
                 {
-                    console.log("Due to the ambiguity in the grammar, it is not possible to parse the string",rule_index);
-                    return;
+                    let message = `"Due to the ambiguity in the grammar, it is not possible to parse the string",${rule_index}`; 
+                    acc_tbl.push([[...this.stack,item].rev_tostr(),all,message]);
+                    this.stack = [];
+                    return acc_tbl;
                 }
-
+                acc_tbl.push([[...this.stack,item].rev_tostr(),all,`Expand ${rule_index}`]);
                 this.append_toks_rule(rule_index);
-                console.log(this.stack.join(" ")," | Expand ",rule_index);
                 continue;
             }
 
             //check token last of stack with entry input...
             if(expr[0] != item) continue;
-            if(this.stack.length == 0) break;
+            if(this.stack.length == 0) {
+                break_pos = expr[1];
+                break;
+            };
 
             ch_pos = expr[1];
-            console.log(this.stack.join(" ")," | Shift ",item);
+            acc_tbl.push([[...this.stack,item].rev_tostr(),all,`Shift ${item}`]);
+            all = this._next_all(src,ch_pos);
             
         }
-        if(this.stack.length == 0) 
-            console.log("Accepted.");
+        all=this._next_all(src,ch_pos);
+        if(this.stack.length == 0 && src.length <= break_pos) 
+            acc_tbl.push([all.trim(),all.trim(),"Accepted"]);
         else 
-            console.log("Syntax Error");
+            acc_tbl.push([[...this.stack,item].rev_tostr(),all,"Syntax Error"]);
+        
         this.stack = [];
+        return acc_tbl;
     }
-
-    
 }
 //functionality 
 const concat_uniq = (origin: string[],target: string[]) =>
@@ -687,6 +722,8 @@ const printer_table=(ll:ITableLL1)=>{
             ...obj
         });
     }
+
+    console.log("LL1 Table");
     console.table(rows,cols);
 };
 const exam5 = () : ICfg =>  {
@@ -704,7 +741,8 @@ const exam5 = () : ICfg =>  {
 //runable method
 const run= ()=>{
     // let gises =init_gramer() as Cfg;
-    let cfg = exam5();
+    // let cfg = exam5();
+    let cfg = my_gram();
     console.log(cfg.uniq_states);
     let ll1_tbl = ll1_table(cfg);
     // ll1_tbl.print_all();
@@ -714,7 +752,8 @@ const run= ()=>{
 
     // ll1.analyze("draw $");
     // ll1.analyze("draw draw $");
-    // ll1.analyze("draw box box $");
+    print_actbl(ll1.analyze("draw box box $"));
+    print_actbl(ll1.analyze("draw box $"));
 };
 
 run();
